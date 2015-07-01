@@ -9,16 +9,15 @@ wb = x.Workbook()
 wb = x.load_workbook(fn)
 
 def getcafef():
-cf = r.get('http://cafef.vn/')
-soup1 = bs(cf.content)
+	cf = r.get('http://cafef.vn/')
+	soup1 = bs(cf.content)
 	news = soup1.find_all("div", {"class":"right"})
 	news = news[1]
 	lis = news.find_all("li")
 	li_content = [ele.text.strip() for ele in lis]
-	ws=wb.worksheets[0]
-for i in range(len(li_content)):
-    ws.cell(row = i + 2, column = 2).value = li_content[i]
-wb.save(fn)
+	for i in range(len(li_content)):
+	ws.cell(row = i + 2, column = 2).value = li_content[i]
+	wb.save(fn)
 
 def getvietstock():
 	vs = wb.worksheets[0]
@@ -28,9 +27,9 @@ def getvietstock():
 	lis=news.find_all("li")
 	li_content=[ele.text.strip() for ele in lis]
 	ws=wb.worksheets[0]
-for i in range(len(li_content)):
-    ws.cell(row = i + 10, column = 2).value = li_content[i]
-wb.save(fn)
+	for i in range(len(li_content)):
+	ws.cell(row = i + 10, column = 2).value = li_content[i]
+	wb.save(fn)
 
 
 getcafef()
