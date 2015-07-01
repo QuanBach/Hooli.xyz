@@ -1,49 +1,45 @@
 
-import tkFileDialog as tkfd
-import Tkinter as tk
+
 import requests as r
-from lxml import html
 from bs4 import BeautifulSoup as bs
 import openpyxl as x
 
 
-fn=''
+fn='C:\Users\Quan\Desktop\Book1.xlsx' #file name de gan duong dan vao
 wb = x.Workbook()
+wb = x.load_workbook(fn)
+# def getFileName(): #lay ten file de xac dinh file nao` can sua
+#     global fn
+#     global wb
+#     fn = tkfd.askopenfilename(filetypes=[('xlsx files', '.xlsx'), ('all files', '.*')], defaultextension='.xlsx')
+#     txtBox.delete(0, tk.END)
+#     txtBox.insert(0, fn)
+#     wb = x.load_workbook(fn)
 
-def getFileName():
-    global fn
-    global wb
-    fn = tkfd.askopenfilename(filetypes=[('xlsx files', '.xlsx'), ('all files', '.*')], defaultextension='.xlsx')
-    txtBox.delete(0, tk.END)
-    txtBox.insert(0, fn)
-    wb = x.load_workbook(fn)
+def getBasicPrice(): #tao ra 1 cai function nho
+#    global wb #trong
+#    global fn
 
-def getBasicPrice():
-    global wb
-    global fn
-    print(wb.get_sheet_names())
 
     ws = wb.worksheets[0]
-    try:
-        vs = r.get('http://vietstock.vn/')
-    except r.ConnectionError:
-        return False
-    vs_html = html.fromstring(vs.content)
 
-    vnindex = vs_html.get_element_by_id('PRICE_VNIndex')
-    vnindex = vnindex.text_content()
+    vs = r.get('http://vietstock.vn/')
+
+    soup1 = bs(vs.content)
+    vnindex = soup1.find("div",{"id" : "PRICE_VNIndex","class":"header_middle_text2"})
+    vnindex = vnindex.text
     ws['C5'] = vnindex
 
-    hnxindex = vs_html.get_element_by_id('PRICE_HastcIndex')
-    hnxindex = hnxindex.text_content()
+    hnxindex = soup1.find("div",{"id": "PRICE_HastcIndex"})
+    hnxindex = hnxindex.text
     ws['C6'] = hnxindex
 
-    oil = vs_html.get_element_by_id('PRICE_CL')
-    oil = oil.text_content()
+    oil = soup1.find("div",{"id": "PRICE_CL"})
+    oil=oil.text
     ws['C7'] = oil
 
     wb.save(fn)
-    return True
+
 
 def getExchangeRate():
     global wb
@@ -53,24 +49,22 @@ def getExchangeRate():
     # er = cafef_html.get_element_by_id('div_tygia')
     # print(type(er.text_content()))
     ws = wb.worksheets[0]
-    try:
-        cafef = r.get('http://cafef.vn/')
-    except r.ConnectionError:
-        return False
-    soup = bs(cafef.content)
-    div = soup.find('div', {'id':'div_tygia'})
+
+    cafef = r.get('http://cafef.vn/')
+
+    soup1 = bs(cafef.content)
+    div = soup1.find('div', {'id':'div_tygia'})
     table_body = div.find('tbody')
-    data = []
     rows = table_body.find_all('tr')
+
+
     for i in range(len(rows)):
         cols = rows[i].find_all('td')
         cols = [ele.text.strip() for ele in cols]
         for j in range(len(cols)):
             ws.cell(row=10+i, column=2+j).value = cols[j]
-        data.append([ele for ele in cols if ele]) # Get rid of empty values
-    wb.save(fn)
-    return True
 
+    wb.save(fn)
 def getFinanceReport():
     try:
         fr = r.get('http://s.cafef.vn/bao-cao-tai-chinh/DPM/IncSta/2050/1/0/0/ket-qua-hoat-dong-kinh-doanh-tong-cong-ty-phan-bon-va-hoa-chat-dau-khictcp.chn')
@@ -113,46 +107,52 @@ def getNews():
     soup = bs(newsPage.content)
     div = soup.find('div', {'id':'divTopEvents'})
     lis = div.find_all('li')
+    alis = div.find_all('a',href=True)
     ws = wb.worksheets[1]
-    li_content = [ele.text.strip() for ele in lis]
+    li_content = [ele.text.strip() for ele in lis] # lay text trong moi cai li
     for i in range(len(li_content)):
         ws.cell(row = i + 1, column = 1).value = li_content[i]
+        ws.cell(row = i + 1, column = 3).value = 'http://s.cafef.vn'+alis[i]['href']
     wb.save(fn)
     return True
 
-def update():
-    global fn
-    if fn:
-        if not getBasicPrice():
-            stringAnnouncement.set('Cannot connect! Check your connection!')
-            return
-        if not getExchangeRate():
-            stringAnnouncement.set('Cannot connect! Check your connection!')
-            return
-        if not getFinanceReport():
-            stringAnnouncement.set('Cannot connect! Check your connection!')
-            return
-        if not getNews():
-            stringAnnouncement.set('Cannot connect! Check your connection!')
-            return
-        stringAnnouncement.set('Update successfully!')
+# def update():
+#     global fn
+#     if fn:
+#         if not getBasicPrice():
+#             stringAnnouncement.set('Cannot connect! Check your connection!')
+#             return
+#         if not getExchangeRate():
+#             stringAnnouncement.set('Cannot connect! Check your connection!')
+#             return
+#         if not getFinanceReport():
+#             stringAnnouncement.set('Cannot connect! Check your connection!')
+#             return
+#         if not getNews():
+#             stringAnnouncement.set('Cannot connect! Check your connection!')
+#             return
+#         stringAnnouncement.set('Update successfully!')
 
-root = tk.Tk()
 
-stringFile = tk.StringVar()
-stringFile.set('File: ')
-stringAnnouncement = tk.StringVar()
-openBtn = tk.Button(root, text='...', command=getFileName)
-updateBtn = tk.Button(root, text='Update', command=update)
-fileLabel = tk.Label(root, textvariable=stringFile)
-txtBox = tk.Entry(root, width=50)
-announcementLabel = tk.Label(root, textvariable=stringAnnouncement)
+# root = tk.Tk()
+# stringFile = tk.StringVar()
+# stringFile.set('File: ')
+# stringAnnouncement = tk.StringVar()
+# openBtn = tk.Button(root, text='...', command=getFileName)
+# updateBtn = tk.Button(root, text='Update', command=update)
+# fileLabel = tk.Label(root, textvariable=stringFile)
+# txtBox = tk.Entry(root, width=50)
+# announcementLabel = tk.Label(root, textvariable=stringAnnouncement)
+#
+# fileLabel.grid(row=0, column=0, padx=5, pady=5)
+# openBtn.grid(row=0, column=2, padx=5, pady=5)
+# txtBox.grid(row=0, column=1, padx=5, pady=5)
+# updateBtn.grid(row=1, column=1, padx=5, pady=5)
+# announcementLabel.grid(row=2, column=0, columnspan=3)
+#
+# root.mainloop()
 
-fileLabel.grid(row=0, column=0, padx=5, pady=5)
-openBtn.grid(row=0, column=2, padx=5, pady=5)
-txtBox.grid(row=0, column=1, padx=5, pady=5)
-updateBtn.grid(row=1, column=1, padx=5, pady=5)
-announcementLabel.grid(row=2, column=0, columnspan=3)
-
-root.mainloop()
-
+getBasicPrice()
+getExchangeRate()
+getFinanceReport()
+getNews()
