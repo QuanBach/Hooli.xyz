@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup as bs
 import requests as r
 import openpyxl as x
 
-fn='D:\LinhTinh\Code\PythonProject\sample.xlsx'
+fn='sample.xlsx'
 wb= x.Workbook()
 wb= x.load_workbook(fn)
 
@@ -91,11 +91,11 @@ def getADB():#41
     for i in range(len(ADBnews)):
         cols = ADBnews[i].find_all('td',{"class":'title'})
         cols = [ele.text.strip() for ele in cols]
-        #print(cols)
+
         ws.cell(row=41+i, column=2).value = ADBlink[i]['href']
-        #for j in range(len(cols)):
-            #print(range(len(cols)))
-        ws.cell(row=41+i, column=1).value = cols[i]
+        for j in range(len(cols)):
+
+            ws.cell(row=41+i, column=1).value = cols[j]
 
     wb.save(fn)
 
