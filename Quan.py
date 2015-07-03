@@ -23,6 +23,7 @@ rows = table.find_all('tr')# kiem trong table nhung cai 'tr'
 for i in range(len(rows)):
     cols = rows[i].find_all('td')
     cols = [ele.text.strip() for ele in cols]
+    print(cols)
     if i % 3 == 1:
         data.append(cols)
 print(data)
